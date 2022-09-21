@@ -59,7 +59,7 @@ def print_color(char, color):
             out.write("${}_{}\n".format(colors[pos],char))
         return
     else:
-        print("Cor errada")
+        print("Wrong color")
         inp.close()
         out.close()
         os.remove(sys.argv[2])
