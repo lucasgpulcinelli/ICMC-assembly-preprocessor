@@ -234,8 +234,8 @@ def read_input_file(text):
 	                            static something + #14, $darkblue_o
 	                            static something + #15, #'\n'
                                 ...
-                                static something + #, $white_x
-	                            static something + #, $white_z
+                                static something + #22, $white_x
+	                            static something + #23, $white_z
 	                            static something + #24, #'\0'
     '''
     # Current position at input file
