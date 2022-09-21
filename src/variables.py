@@ -180,7 +180,6 @@ def read_string(text, var, cur_pos):
         else:
             if (text[cur_pos] == "\\" and (text[cur_pos+1] == "\"" or text[cur_pos+1] == "$")):
                     cur_pos += 1
-                    continue
             out.write(f"\tstatic {var} + #{i}, ")
             print_with_color(text[cur_pos],"wh")
             i += 1
