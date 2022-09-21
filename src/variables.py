@@ -15,7 +15,7 @@ def print_with_color(char, color):
     print_with_color compares the color provided in the function input with the array with the color abbreviations
     and prints in the output file the char with the color format: $char_color
 
-    To print something in this format, the substring in the input file must be like: "... $colorSomethingWithColor\$...\"
+    To print something in this format, the substring in the input file must be like: "... $colorSomethingWithColor$..."
     with color being one of the abbreviations in the array below
 
     Example of output: First letter of "var_name" (char = a, color = white)
@@ -41,12 +41,13 @@ def print_with_color(char, color):
             value_index = -1
         # Print char with the color format
         if value_index != -1:
-            out.write("${}_{}\n".format(colors[color_pos],subst_chars[value_index]))
+            out.write(f"${colors[color_pos]}_{subst_chars[value_index]}\n")
         else:
-            out.write("${}_{}\n".format(colors[color_pos],char))
+            out.write(f"${colors[color_pos]}_{char}\n")
         return
     else:
-        print("Wrong color")
+        print(f"The color {color} is invalid. There are the following colors available: {colors}.")
+        print(f"Their abbreviations are: {abbreviations}.")
         inp.close()
         out.close()
         os.remove(sys.argv[2])
@@ -118,7 +119,7 @@ def read_string(text, var, cur_pos):
     loop = 1
     while loop:
         quot_pos = text.find('"', quot_pos)
-        if text[quot_pos-1] != '\\':
+        if text[quot_pos-1] == '\\':
             quot_pos += 1
             continue
         else:
@@ -127,11 +128,16 @@ def read_string(text, var, cur_pos):
     # String size
     count = 0
     j = cur_pos+1
-    while j < quot_pos-1:
-        if text[j] == '$' and text[j-1] == '\\':
+    while j < quot_pos:
+        if (text[j] == '$'):
+            if (text[j-1] != '\\'):
+                count += 2
+            else:
+                count += 1
+        elif (text[j] == '"' and text[j-1] == '\\'):
             count += 1
         j += 1
-    size_string = (quot_pos-1) - cur_pos - 5*(count)
+    size_string = quot_pos - cur_pos - count
     cur_pos += 1
 
     # Print string define
@@ -154,7 +160,7 @@ def read_string(text, var, cur_pos):
             # Find color end
             while loop:
                 dollar_pos = text.find('$', dollar_pos)
-                if text[dollar_pos-1] != '\\':
+                if text[dollar_pos-1] == '\\':
                     dollar_pos += 1
                     continue
                 else:
@@ -162,13 +168,19 @@ def read_string(text, var, cur_pos):
             color = text[cur_pos+1:cur_pos+3]
             cur_pos += 3
             # Print string with colors
-            while cur_pos < dollar_pos-1:
+            while cur_pos < dollar_pos:
+                if (text[cur_pos] == "\\" and (text[cur_pos+1] == "\"" or text[cur_pos+1] == "$")):
+                    cur_pos += 1
+                    continue
                 out.write(f"\tstatic {var} + #{i}, ")
                 print_with_color(text[cur_pos],color)
                 i += 1
                 cur_pos += 1
             cur_pos = dollar_pos + 1
         else:
+            if (text[cur_pos] == "\\" and (text[cur_pos+1] == "\"" or text[cur_pos+1] == "$")):
+                    cur_pos += 1
+                    continue
             out.write(f"\tstatic {var} + #{i}, ")
             print_with_color(text[cur_pos],"wh")
             i += 1
@@ -206,8 +218,8 @@ def read_input_file(text):
     Strings:
         Example:
 
-            Input file:     something = "abc...$dbHello\$
-                            ...xz\"
+            Input file:     something = "abc...$dbHello$
+                            ...xz"
             
             Output file:    #define something_len 25
                             something : var #25
