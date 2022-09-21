@@ -55,21 +55,141 @@ def print_with_color(char, color):
 def read_var_name(text, cur_pos):
     '''
     read_var_name defines the variable name and returns it as a string. Also returns the positon after the equal sign.
+
+    If equal sign is not find, that means that the input file reached its end (function returns an empty string and -1 as the equal
+    position)
     '''
     # Finds the next equal sign and defines the substring before it as the variable
     equal_pos = text.find("=", cur_pos)
-    if equal_pos == -1: # TRATAR ESTE ERRO DE MANEIRA DECENTE
-        return "error", -1
+    # End of file
+    if equal_pos == -1:
+        return "", -1
     var = text[cur_pos:equal_pos].strip()
     return var, (equal_pos + 1)
 
+def read_array(text, var, cur_pos):
+    '''
+    read_array defines the numeric array variable and its lenght. It also print the beginning of the variables in the output file and
+    calls the print_with_color function.
 
-def read_input_file(input_fle):
+    The function returns the current position in the file after processing the array (-1 if it finds the end of file)
+    '''
+    # Finds the end of the array
+    bracket_pos = text.find("]", cur_pos)
+    array = text[cur_pos+1:bracket_pos].split(",")
+    array = [int(e) for e in array]
+    # Size of the array
+    size_array = len(array)
+
+    cur_pos = bracket_pos + 1
+
+    # Print define array
+    out.write(f"#define {var}_len {size_array}\n")
+    # Print array name and size
+    out.write(f"{var} : var #{size_array}\n")
+
+    # Print array
+    i = 0
+    while i < size_array:
+        out.write(f"\tstatic {var} + #{i}, #{array[i]}\n")
+        i += 1
+    # End of file
+    if cur_pos >= len(text):
+        return -1
+
+    while text[cur_pos] == ' ' or text[cur_pos] == '\n':
+        cur_pos += 1
+        if cur_pos >= len(text):
+            # end of file
+            return -1
+    return cur_pos
+    
+def read_string(text, var, cur_pos):
+    '''
+    read_string defines the string and its lenght. It also print the beginning of the variables in the output file and
+    calls the print_with_color function.
+
+    The function returns the current position in the file after processing the string (-1 if it finds the end of file)
+    '''
+    size_string = 0
+    
+    # Find string end
+    quot_pos = cur_pos+1
+    loop = 1
+    while loop:
+        quot_pos = text.find('"', quot_pos)
+        if text[quot_pos-1] != '\\':
+            quot_pos += 1
+            continue
+        else:
+            loop = 0
+    
+    # String size
+    count = 0
+    j = cur_pos+1
+    while j < quot_pos-1:
+        if text[j] == '$' and text[j-1] == '\\':
+            count += 1
+        j += 1
+    size_string = (quot_pos-1) - cur_pos - 5*(count)
+    cur_pos += 1
+
+    # Print string define
+    out.write(f"#define {var}_len {size_string}\n")
+    # Print string size
+    out.write(f"{var} : var #{size_string}\n")
+    # Find string end and print string
+    i = 0
+    while i < size_string-1:
+        # \n
+        if text[cur_pos] == '\n':
+            out.write(f"\tstatic {var} + #{i}, #'\\n'\n")
+            i += 1
+            cur_pos += 1
+            continue
+        # Colors
+        if text[cur_pos] == '$':
+            dollar_pos = cur_pos + 1
+            loop = 1
+            # Find color end
+            while loop:
+                dollar_pos = text.find('$', dollar_pos)
+                if text[dollar_pos-1] != '\\':
+                    dollar_pos += 1
+                    continue
+                else:
+                    loop = 0
+            color = text[cur_pos+1:cur_pos+3]
+            cur_pos += 3
+            # Print string with colors
+            while cur_pos < dollar_pos-1:
+                out.write(f"\tstatic {var} + #{i}, ")
+                print_with_color(text[cur_pos],color)
+                i += 1
+                cur_pos += 1
+            cur_pos = dollar_pos + 1
+        else:
+            out.write(f"\tstatic {var} + #{i}, ")
+            print_with_color(text[cur_pos],"wh")
+            i += 1
+            cur_pos += 1
+    # \0    
+    out.write(f"\tstatic {var} + #{i}, #'\\0'\n")
+    cur_pos = quot_pos + 1
+    if cur_pos >= len(text):
+        # End of file
+        return -1
+    while text[cur_pos] == ' ' or text[cur_pos] == '\n':
+        cur_pos += 1
+        # End of file
+        if cur_pos >= len(text):
+            return -1
+    return cur_pos
+
+def read_input_file(text):
     '''
     read_input_file reads all the input file, defines the variables, their lenght and uses the print_with_color function
     to print in the output file all the variables provided, with the following format:
-    
-    # COLOCAR OS EXEMPLOS EM UM ARQUIVO .VARS SEPARADO
 
     Numeric Arrays:         
         Example:
@@ -112,127 +232,29 @@ def read_input_file(input_fle):
     # Read input archive
     while cur_pos < len(text):
 
+        # Read variable
         var, cur_pos = read_var_name(text, cur_pos)
-        # MUDAR ISSO PARA UM ERRO NA FUNCAO
+        # End of file
         if cur_pos == -1:
             break
-
+        
+        # Find if variable is a string or an array
         while (text[cur_pos] != '"') and (text[cur_pos] != '['):
             cur_pos += 1
 
         # Array
         if text[cur_pos] == '[':
-            bracket_pos = text.find("]", cur_pos)
-            array = text[cur_pos+1:bracket_pos]
-            array = array.split(",")
-            array = [int(e) for e in array]
-
-            size_array = len(array)
-
-            cur_pos = bracket_pos + 1
-
-            # Print define array
-            out.write("#define {}_len {}\n".format(var, size_array))
-            # Print array name and size
-            out.write("{} : var #{}\n".format(var, size_array))
-
-            # Print array
-            i = 0
-            while i < size_array:
-                out.write("\tstatic {} + #{}, #{}\n".format(var, i, array[i]))
-                i += 1
-
-            if cur_pos >= len(text):
-                 break
-
-            while text[cur_pos] == ' ' or text[cur_pos] == '\n':
-                cur_pos += 1
-                if cur_pos >= len(text):
-                    break
-            continue
+            cur_pos = read_array(text, var, cur_pos)
+            # End of file
+            if cur_pos == -1:
+                break
         
         # String
         elif text[cur_pos] == '"':
-            size_string = 0
-            quot_pos = cur_pos
-            loop = 1
-            # Find string end
-            while loop:
-                quot_pos = text.find('"', quot_pos + 1)
-                if text[quot_pos-1] != '\\':
-                    quot_pos += 1
-                    continue
-                else:
-                    loop = 0
-            # String size
-            count = 0
-            j = cur_pos+1
-            while j < quot_pos-1:
-                if text[j] == '$' and text[j-1] == '\\':
-                    count += 1
-                j += 1
-            size_string = (quot_pos-1) - cur_pos - 5*(count)
-            cur_pos += 1
-
-            # Print string define
-            out.write("#define {}_len {}\n".format(var, size_string))
-            # Print string size
-            out.write("{} : var #{}\n".format(var, size_string))
-
-            # Find string end and print string
-            i = 0
-            while i < size_string-1:
-                # \n
-                if text[cur_pos] == '\n':
-                    out.write("\tstatic {} + #{}, #'\\n'\n".format(var, i))
-                    i += 1
-                    cur_pos += 1
-                    continue
-                # Colors
-                if text[cur_pos] == '$':
-                    dollar_pos = cur_pos
-                    loop = 1
-                    # Find color end
-                    while loop:
-                        dollar_pos = text.find('$', dollar_pos + 1)
-                        if text[dollar_pos-1] != '\\':
-                            dollar_pos += 1
-                            continue
-                        else:
-                            loop = 0
-
-                    color = text[cur_pos+1:cur_pos+3]
-                    cur_pos += 3
-                    # Print string with colors
-                    while cur_pos < dollar_pos-1:
-                        out.write("\tstatic {} + #{}, ".format(var, i))
-                        print_with_color(text[cur_pos],color)
-                        i += 1
-                        cur_pos += 1
-                    cur_pos = dollar_pos + 1
-                else:
-                    out.write("\tstatic {} + #{}, ".format(var, i))
-                    print_with_color(text[cur_pos],"wh")
-                    i += 1
-                    cur_pos += 1
-
-            # \0    
-            out.write("\tstatic {} + #{}, #'\\0'\n".format(var, i))
-            cur_pos = quot_pos
-            cur_pos += 1
-
-            if cur_pos >= len(text):
-                 break
-
-            while text[cur_pos] == ' ' or text[cur_pos] == '\n':
-                cur_pos += 1
-                if cur_pos >= len(text):
-                    break
-            continue
-        cur_pos += 1
-
-    inp.close()
-    out.close()
+            cur_pos = read_string(text, var, cur_pos)
+            # End of file
+            if cur_pos == -1:
+                break
 
 
 if __name__ == "__main__":
@@ -247,4 +269,5 @@ if __name__ == "__main__":
     
     read_input_file(text)
 
-    
+    inp.close()
+    out.close()    
