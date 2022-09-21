@@ -137,9 +137,8 @@ def read_string(text, var, cur_pos):
         elif (text[j] == '"' and text[j-1] == '\\'):
             count += 1
         j += 1
-    size_string = quot_pos - cur_pos - count
+    size_string = quot_pos - cur_pos - count - 1 # -1 in order to remove '/0' from being counted as a character in string_size
     cur_pos += 1
-
     # Print string define
     out.write(f"#define {var}_len {size_string}\n")
     # Print string size
