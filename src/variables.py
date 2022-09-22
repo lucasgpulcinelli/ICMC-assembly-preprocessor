@@ -1,6 +1,44 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 import sys
 import os
+
+
+"""
+======================================================
+------------- ICMC Assembly Preprocessor -------------
+======================================================
+
+Utilities to vector/variable declaration:
+-----------------------------------------
+This component of the preprocessor simplifies
+the syntax of variable declaration and initialization
+to a python-like syntax.
+
+Examples:
+-----------------------------------------
+You can declare and initialize an array {1, 2, 3, 4, 5}
+as follows:
+array_name = [1, 2, 3, 4, 5]
+
+And initialize a string with:
+string_name = "Hello, Mate! -=+&4%12#@,./"
+
+If you wish to print a string in a specific color,
+you can specify it by surrounding the colored text
+with dollar signs. The first two characters of the
+surrounded text specify the color. For instance, if 
+you want to print "Hello World!" in dark red, you could 
+use:
+my_hello = "$drHello World!$"
+
+To store a double quote or a dollar sign in a string,
+use a scape character, like in C strings:
+
+"\$\$\$ are many dollar signs" stands for 
+"$$$ are many dollar signs"
+======================================================
+"""
 
 # Replace special chars
 special_chars = [' ', '!', '"', '#', '$', '%', '&', '\'', '(', ')', '*', '+', ',', '-', '.', '/', ':', ';',
@@ -137,7 +175,7 @@ def read_string(text, var, cur_pos):
         elif (text[j] == '"' and text[j-1] == '\\'):
             count += 1
         j += 1
-    size_string = quot_pos - cur_pos - count - 1 # -1 in order to remove '/0' from being counted as a character in string_size
+    size_string = quot_pos - cur_pos - count
     cur_pos += 1
     # Print string define
     out.write(f"#define {var}_len {size_string}\n")
@@ -268,13 +306,12 @@ def read_input_file(text):
 
 
 if __name__ == "__main__":
-    # Input and output archives
+    # Check if user correctly specified input and output files
     if len(sys.argv) < 3:
         print(f"Error, use {sys.argv[0]} input.vars output.asm", file=sys.stderr)
     inp = open(sys.argv[1], "r")
     out = open(sys.argv[2], "w")
     
-    # Store input archive in text
     text = inp.read()
     
     read_input_file(text)
