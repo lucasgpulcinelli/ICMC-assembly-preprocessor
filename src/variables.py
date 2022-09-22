@@ -178,7 +178,7 @@ def read_string(text, var, cur_pos):
     size_string = quot_pos - cur_pos - count
     cur_pos += 1
     # Print string define
-    out.write(f"#define {var}_len {size_string-1}\n")
+    out.write(f"#define {var}_len {size_string}\n")
     # Print string size
     out.write(f"{var} : var #{size_string}\n")
     # Find string end and print string
