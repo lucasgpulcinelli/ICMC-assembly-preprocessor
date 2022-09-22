@@ -1,8 +1,20 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 import sys
 import json
 import re
 import os
+
+"""
+======================================================
+------------- ICMC Assembly Preprocessor -------------
+======================================================
+
+Utilities to macro definitions:
+-----------------------------------------
+This component of the preprocessor defines C-like
+macros. 
+"""
 
 
 class EvalError(Exception):
