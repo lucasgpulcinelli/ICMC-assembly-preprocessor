@@ -1,7 +1,7 @@
 
 main:
     loadn r0, #msg
-    loadn r1, $position(eval((40-int(defs["msg_len"]))//2),eval(30//2))
+    loadn r1, $position(eval((sw-int(defs["msg_len"]))//2),eval(sh//2))
     ;r2 is the next character
     ;r3 is a temporary value
 
