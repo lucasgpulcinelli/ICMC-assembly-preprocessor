@@ -79,6 +79,14 @@ def preprocessLine(line, defs_mapper, macro_mapper, inside=False):
     except Exception as e:
         raise EvalError(str(e))
 
+    if eval_ret < 0 and not inside:
+        # the last substitution for a macro should not be negative, if it was
+        # the assembler would not understand it
+        raise ValueError(
+            f"last substitution was a negative number: {eval_ret}"
+        )
+
+
     new_line = line[:start] + f'#{eval_ret}' + line[end:]
     return new_line
 
@@ -165,7 +173,7 @@ def preprocess(base_mapper, file_in, file_out):
 
     defs_mapper, macro_mapper = createFullMappers(base_mapper)
 
-    lineno = 0
+    lineno = 1
     try:
         for line in file_in:
             newline = preprocessLine(line, defs_mapper, macro_mapper)
@@ -179,7 +187,7 @@ def preprocess(base_mapper, file_in, file_out):
     except KeyError as e:
         print(f'{e} undefined at line {lineno}', file=sys.stderr)
     except ValueError as e:
-        print(f"return of eval could not be converted to int:\'{e}\' "
+        print(f"return of eval could not be converted to int: {e} "
              f"at line {lineno}", file=sys.stderr)
     else:
         return
